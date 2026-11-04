@@ -28,7 +28,7 @@ def groq_reply(char, msg):
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
         payload = {
-    "model": "llama-3.3-70b-versatile",
+    "model": "openai/gpt-oss-20b",
     "messages": [{"role":"system","content":PROMPTS[char]}, {"role":"user","content":msg}],
     "max_tokens": 250
         }
