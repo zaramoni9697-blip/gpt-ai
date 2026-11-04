@@ -80,12 +80,18 @@ async function send(){
  const chat = document.getElementById('chat');
  if(chat.querySelector('.welcome')) chat.innerHTML='';
  
- chat.innerHTML += `<div class="msg user">${text}</div>`;
+ // message add করার safe way
+ const userDiv = document.createElement('div');
+ userDiv.className = 'msg user';
+ userDiv.textContent = text;
+ chat.appendChild(userDiv);
  inp.value='';
  chat.scrollTop = chat.scrollHeight;
  
- const id = Date.now();
- chat.innerHTML += `<div class="msg bot" id="b${id}"><span class="typing">Zara typing...</span></div>`;
+ const botDiv = document.createElement('div');
+ botDiv.className = 'msg bot';
+ botDiv.innerHTML = '<span class="typing">Zara typing...</span>';
+ chat.appendChild(botDiv);
  chat.scrollTop = chat.scrollHeight;
 
  try{
@@ -95,12 +101,12 @@ async function send(){
    body: JSON.stringify({message:text, character:character})
   });
   const data = await res.json();
-  document.getElementById('b'+id).innerHTML = `${data.reply}<small>Zara • just now</small>`;
+  botDiv.innerHTML = `${data.reply}<small>Zara • just now</small>`;
  }catch(e){
-  document.getElementById('b'+id).innerHTML = `Server error, API key check করো 😢`;
+  botDiv.innerHTML = `Net slow, আবার বলো জান 😢`;
  }
  chat.scrollTop = chat.scrollHeight;
-}
+ }
 </script>
 </body>
   </html>
