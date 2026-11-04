@@ -1,16 +1,18 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import os, requests, time
+import os
+import requests
+import time
 
 app = Flask(__name__)
 CORS(app)
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY","").strip()
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
 
 PROMPTS = {
- "gf": "You are Zara, cute Bengali girlfriend. Very short reply (under 20 words), Bangla mix, emoji.",
- "roast": "You are Bangla Roast Master. Very short savage roast, funny, emoji.",
- "study": "You are study buddy. Short, easy Bangla explain."
+    "gf": "You are Zara, cute Bengali girlfriend. Short reply under 20 words, Bangla mix, emoji, call user jaan.",
+    "roast": "You are Bangla Roast Master. Short savage funny roast, emoji.",
+    "study": "You are study buddy. Short easy Bangla explain."
 }
 
 @app.route("/")
@@ -20,60 +22,49 @@ def home():
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.json
-    msg = data.get("message","")[:300]  # 300 char limit
-    char = data.get("character","gf")
-    
+    msg = data.get("message", "")[:300]
+    char = data.get("character", "gf")
+
     if not GROQ_API_KEY:
-        return jsonify({"reply": "API key missing"})
-    
-    for attempt in range(3):  # 3 বার try করবে rate limit হলে
-        try:
-            r = requests.post("https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
-                json={
-                    "model": "openai/gpt-oss-20b",
-                    "messages": [{"role":"system","content":PROMPTS[char]},{"role":"user","content":msg}],
-                    "max_tokens": 150,  # ছোট রাখলাম, fast হবে, limit খাবে না
-                    "temperature": 0.8
-                }, timeout=20)
-            
-            
-                @app.route("/api/chat", methods=["POST"])
-def chat():
-    data = request.json
-    msg = data.get("message","")[:300]
-    char = data.get("character","gf")
-    if not GROQ_API_KEY:
-        return jsonify({"reply": "API key missing"})
+        return jsonify({"reply": "API key missing in Render"})
+
     for attempt in range(3):
         try:
-            r = requests.post("https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+            r = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json"
+                },
                 json={
                     "model": "openai/gpt-oss-20b",
-                    "messages": [{"role":"system","content":PROMPTS[char]},{"role":"user","content":msg}],
+                    "messages": [
+                        {"role": "system", "content": PROMPTS.get(char, PROMPTS["gf"])},
+                        {"role": "user", "content": msg}
+                    ],
                     "max_tokens": 200,
                     "temperature": 0.8
-                }, timeout=20)
-            if r.status_code==200:
+                },
+                timeout=20
+            )
+
+            if r.status_code == 200:
                 j = r.json()
-                content = j["choices"][0]["message"].get("content","").strip()
+                content = j["choices"][0]["message"].get("content", "").strip()
                 if not content:
-                    content = "হ্যাঁ জান বলো শুনছি! 💖 আবার বলো কি বলছিলে?"
+                    content = "হ্যাঁ জান বলো শুনছি! 💖"
                 return jsonify({"reply": content})
-            elif r.status_code==429:
+            elif r.status_code == 429:
                 time.sleep(1.5)
                 continue
             else:
-                return jsonify({"reply": "একটু busy আছি জান, 2 sec পর আবার বলো 😘"})
+                return jsonify({"reply": "Busy আছি জান, আবার বলো 😘"})
         except Exception as e:
-            print(e)
+            print(f"Error: {e}")
             time.sleep(1)
-    return jsonify({"reply": "উফ নেট slow জান 🥺 আবার try করো"})
-        except:
-            time.sleep(1)
-    
-    return jsonify({"reply": "একটু slow হচ্ছে জান, 2 sec পর আবার বলো 🥺"})
+
+    return jsonify({"reply": "নেট slow জান 🥺 আবার বলো"})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
